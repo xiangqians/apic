@@ -46,8 +46,13 @@
             requestInterceptor: function (request) { // 将所有 API 请求转到本地代理
                 let operation = window.swaggerEditor?.operation;
                 if (operation) {
-                    let key = operation.method +'_'+ operation.path;
-                    console.log('key', key);
+                    if (window.reqInterceptors) {
+                        let key = operation.method + ' ' + operation.path;
+                        let reqInterceptor = window.reqInterceptors[key];
+                        if (reqInterceptor) {
+                            request = reqInterceptor(request);
+                        }
+                    }
 
                     let specSelectors = window.swaggerEditor.specSelectors;
                     let scheme = specSelectors.operationScheme() || 'http';
@@ -56,6 +61,7 @@
                         request.headers['Base-Url'] = baseUrl;
                         request.url = '{{ .prefix }}/proxy' + request.url.substring(baseUrl.length);
                     }
+                    
                     window.swaggerEditor.operation = null;
                 }
                 return request;
