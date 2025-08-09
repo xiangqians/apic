@@ -1,2 +1,2 @@
-# swag
+# Swag
 Swagger
