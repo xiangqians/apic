@@ -7,19 +7,58 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 //go:embed swagger.js swagger.css index.html
 var embedfs embed.FS
 
-func Handle(prefix, name string) {
+var names map[string]string
+
+func Handle(prefix, dir string) {
 	// 创建文件服务器
 	handler := http.FileServer(http.FS(embedfs))
 	// 处理请求
 	http.Handle(fmt.Sprintf("%s/", prefix), http.StripPrefix(prefix, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
+			entries, err := os.ReadDir(dir)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			var name string
+			names = make(map[string]string)
+			for _, entry := range entries {
+				if !entry.IsDir() {
+					var fname = entry.Name()
+					var jname = "swagger.json"
+					if fname == "swagger.yaml" {
+						if _, ok := names[jname]; ok {
+							delete(names, jname)
+						}
+						name = fname
+						names[fname] = dir + "/" + fname
+					} else if fname == jname {
+						if name == "" {
+							name = fname
+							names[fname] = dir + "/" + fname
+						}
+					} else if strings.HasSuffix(fname, ".js") && fname != "swagger.js" {
+						names[fname] = dir + "/" + fname
+					}
+				}
+			}
+			log.Printf("names: %+v\n", names)
+
+			var data = map[string]interface{}{
+				"prefix": prefix,
+				"name":   name,
+			}
+
 			var tname = "index.html"
 			tmpl, err := template.New("").ParseFS(embedfs, tname)
 			if err != nil {
@@ -27,10 +66,6 @@ func Handle(prefix, name string) {
 				return
 			}
 
-			var data = map[string]interface{}{
-				"prefix": prefix,
-				"name":   name,
-			}
 			err = tmpl.ExecuteTemplate(w, tname, data)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -45,20 +80,29 @@ func Handle(prefix, name string) {
 			return
 		}
 
-		if r.URL.Path == "/"+name {
+		var name = r.URL.Path[1:]
+		if path, ok := names[name]; ok {
 			if r.Method == http.MethodGet {
-				data, err := os.ReadFile(name)
+				data, err := os.ReadFile(path)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
 
-				w.Header().Set("Content-Type", "application/json")
+				var contentType string
+				if strings.HasSuffix(name, ".yaml") {
+					contentType = "application/yaml"
+				} else if strings.HasSuffix(name, ".json") {
+					contentType = "application/json"
+				} else if strings.HasSuffix(name, ".js") {
+					contentType = "application/javascript"
+				}
+				w.Header().Set("Content-Type", contentType)
 				w.Write(data)
 				return
 
-			} else if r.Method == http.MethodPost {
-
+			} else if r.Method == http.MethodPost && (strings.HasSuffix(name, ".yaml") || strings.HasSuffix(name, ".json")) {
+				http.NotFound(w, r)
 				return
 			}
 

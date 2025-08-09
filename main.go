@@ -20,7 +20,7 @@ func main() {
 	log.Printf("%+v\n", config)
 
 	// HTTP 请求处理
-	Handle(config.Prefix, config.Name)
+	Handle(config.Prefix, config.Dir)
 
 	// 启动 HTTP 服务
 	port := config.Port

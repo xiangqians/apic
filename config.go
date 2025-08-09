@@ -18,7 +18,7 @@ func LoadConfig() (Config, error) {
 	}
 	config.Port = uint16(section.Key("port").MustUint())
 	config.Prefix = section.Key("prefix").String()
-	config.Name = section.Key("name").String()
+	config.Dir = section.Key("dir").String()
 
 	return config, nil
 }
@@ -26,5 +26,5 @@ func LoadConfig() (Config, error) {
 type Config struct {
 	Port   uint16 // HTTP 监听端口
 	Prefix string // HTTP 请求前缀
-	Name   string // Swagger 文件地址
+	Dir    string // Spec 目录
 }
