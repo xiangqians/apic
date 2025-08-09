@@ -19,8 +19,11 @@ func main() {
 	}
 	log.Printf("%+v\n", config)
 
-	// HTTP 请求处理
-	Handle(config.Prefix, config.Dir)
+	// 处理请求
+	err = Handle(config.Prefix, config.Dir)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	// 启动 HTTP 服务
 	port := config.Port

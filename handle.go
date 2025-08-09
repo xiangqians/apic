@@ -15,10 +15,20 @@ import (
 
 //go:embed swagger.js swagger.css index.html
 var embedfs embed.FS
+var funcMap = template.FuncMap{
+	"hasSuffix": strings.HasSuffix,
+}
+var tmpl *template.Template
 
 var names map[string]string
 
-func Handle(prefix, dir string) {
+func Handle(prefix, dir string) error {
+	var err error
+	tmpl, err = template.New("").Funcs(funcMap).ParseFS(embedfs, "index.html")
+	if err != nil {
+		return err
+	}
+
 	// 创建文件服务器
 	handler := http.FileServer(http.FS(embedfs))
 	// 处理请求
@@ -57,16 +67,10 @@ func Handle(prefix, dir string) {
 			var data = map[string]interface{}{
 				"prefix": prefix,
 				"name":   name,
+				"names":  names,
 			}
 
-			var tname = "index.html"
-			tmpl, err := template.New("").ParseFS(embedfs, tname)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			err = tmpl.ExecuteTemplate(w, tname, data)
+			err = tmpl.ExecuteTemplate(w, "index.html", data)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -152,4 +156,6 @@ func Handle(prefix, dir string) {
 		// 复制响应体
 		io.Copy(w, resp.Body)
 	})))
+
+	return nil
 }

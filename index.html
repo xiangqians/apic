@@ -16,10 +16,12 @@
 </body>
 </html>
 <script src="{{ .prefix }}/swagger.js" type="text/javascript"></script>
+{{ range $name, $path := .names }}
+{{ if hasSuffix $name ".js" }}
+<script src="{{ $.prefix }}/{{ $name }}" type="text/javascript"></script>
+{{ end }}
+{{end}}
 <script type="text/javascript">
-
-    let requestInterceptors = null;
-
     window.onload = () => {
         window.swaggerEditor = SwaggerEditorBundle({
             dom_id: '#swagger-editor',
