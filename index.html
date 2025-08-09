@@ -79,6 +79,9 @@
                 }
                 return request;
             },
+            onComplete: function () { // 加载完成回调
+                document.title = window.swaggerEditor.specSelectors.info().get('title');
+            },
         });
     };
 </script>
