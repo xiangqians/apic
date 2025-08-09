@@ -33,7 +33,7 @@ func Handle(prefix, dir string) error {
 	handler := http.FileServer(http.FS(embedfs))
 	// 处理请求
 	http.Handle(fmt.Sprintf("%s/", prefix), http.StripPrefix(prefix, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
+		if r.URL.Path == "/" || r.URL.Path == "/edit" {
 			entries, err := os.ReadDir(dir)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -65,6 +65,7 @@ func Handle(prefix, dir string) error {
 			log.Printf("names: %+v\n", names)
 
 			var data = map[string]interface{}{
+				"edit":   r.URL.Path == "/edit",
 				"prefix": prefix,
 				"name":   name,
 				"names":  names,

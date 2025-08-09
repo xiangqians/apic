@@ -9,6 +9,19 @@
             overflow-y: auto !important;
             max-height: 100vh !important;
         }
+
+        {{ if not .edit }}
+        .Pane1 {
+            display: none !important;
+        }
+        .Pane2 {
+            width: 100% !important;
+            left: 0 !important;
+        }
+        .Resizer {
+            display: none !important;
+        }
+        {{ end }}
     </style>
 </head>
 <body>
@@ -20,7 +33,7 @@
 {{ if hasSuffix $name ".js" }}
 <script src="{{ $.prefix }}/{{ $name }}" type="text/javascript"></script>
 {{ end }}
-{{end}}
+{{ end }}
 <script type="text/javascript">
     window.onload = () => {
         window.swaggerEditor = SwaggerEditorBundle({
@@ -61,7 +74,7 @@
                         request.headers['Base-Url'] = baseUrl;
                         request.url = '{{ .prefix }}/proxy' + request.url.substring(baseUrl.length);
                     }
-                    
+
                     window.swaggerEditor.operation = null;
                 }
                 return request;
