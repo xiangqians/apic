@@ -1,0 +1,134 @@
+definitions:
+  model.TokenReq:
+    properties:
+      name:
+        description: 用户名
+        type: string
+      password:
+        description: 密码
+        type: string
+    type: object
+  model.TokenResp:
+    properties:
+      accessToken:
+        description: 访问令牌
+        type: string
+      expiresAt:
+        description: 过期时间
+        type: string
+    type: object
+  model.User:
+    properties:
+      addTime:
+        description: 添加时间
+        type: string
+      del:
+        description: 是否已删除，0-未删除，1-已删除
+        type: integer
+      id:
+        description: 主键
+        type: integer
+      name:
+        description: 用户名
+        type: string
+      password:
+        description: 密码
+        type: string
+      roleId:
+        description: 角色主键
+        type: integer
+      updTime:
+        description: 修改时间
+        type: string
+    type: object
+  xhttp.Resp:
+    properties:
+      code:
+        description: 状态码
+        type: string
+      data:
+        description: 数据
+      msg:
+        description: 消息
+        type: string
+    type: object
+host: localhost:58888
+info:
+  contact: { }
+  description: GWeb 系统
+  title: GWeb 系统
+  version: 1.0.0
+paths:
+  /api/v1/sys/user:
+    post:
+      consumes:
+        - application/json
+      description: 新增用户信息
+      parameters:
+        - description: 新增用户请求信息
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: '#/definitions/model.User'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: '#/definitions/xhttp.Resp'
+              - properties:
+                  data:
+                    type: boolean
+                type: object
+      summary: 新增用户
+      tags:
+        - user
+  /api/v1/sys/user/revoke:
+    post:
+      description: 撤销令牌
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: '#/definitions/xhttp.Resp'
+              - properties:
+                  data:
+                    type: boolean
+                type: object
+      summary: 撤销令牌
+      tags:
+        - auth
+  /api/v1/sys/user/token:
+    post:
+      consumes:
+        - application/json
+      description: 获取令牌
+      parameters:
+        - description: 令牌请求信息
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: '#/definitions/model.TokenReq'
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: '#/definitions/xhttp.Resp'
+              - properties:
+                  data:
+                    $ref: '#/definitions/model.TokenResp'
+                type: object
+      summary: 获取令牌
+      tags:
+        - auth
+swagger: "2.0"
