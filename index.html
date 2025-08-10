@@ -49,20 +49,21 @@
             url: url,
             docExpansion: 'none',         // 全部折叠
             defaultModelsExpandDepth: -1, // 隐藏模型定义
-            defaultModelExpandDepth: 2,   // 模型默认展开深度
+            defaultModelExpandDepth: 3,   // 模型默认展开深度
             deepLinking: true,            // 启用 URL 深度链接，让浏览器地址栏的 URL 能直接跳转到特定的 API 文档位置（如某个 Tag、Operation 或 Model）
             displayRequestDuration: true, // 是否显示 API 请求耗时
-            plugins: [() => ({            // 通过插件拦截 execute 动作来获取当前 Operation
+            plugins: [() => ({            // 自定义插件
                 statePlugins: {
                     spec: {
                         wrapActions: {
-                            execute: (originalExecute, system) => (operation) => {
+                            // 通过插件拦截 execute 动作来获取当前 Operation
+                            execute: (originalExecute) => (operation) => {
                                 window.swaggerEditor.operation = operation;
                                 return originalExecute(operation);
-                            }
-                        }
+                            },
+                        },
                     }
-                }
+                },
             })],
             requestInterceptor: function (request) { // 将所有 API 请求转到本地代理
                 let operation = window.swaggerEditor?.operation;
@@ -79,43 +80,47 @@
                     let scheme = specSelectors.operationScheme() || 'http';
                     let baseUrl = scheme + '://' + specSelectors.host();
                     if (request.url.startsWith(baseUrl)) {
-                        request.headers['Base-Url'] = baseUrl;
+                        request.headers['X-Url'] = request.url;
                         request.url = '{{ .prefix }}/proxy' + request.url.substring(baseUrl.length);
                     }
-
-                    window.swaggerEditor.operation = null;
                 }
                 return request;
+            },
+            responseInterceptor: (response) => {
+                return response;
             },
             onComplete: function () { // 加载完成回调
                 // 设置标题
                 document.title = window.swaggerEditor.specSelectors.info().get('title');
-
-                let edit = {{ .edit }};
-                if(edit){
-                    // 获取内容
-                    let spec = window.swaggerEditor.specSelectors.specStr();
-                    hash(spec).then(function (hash) {
-                        if (window.swaggerEditor.hash) {
-                            if (window.swaggerEditor.hash != hash) {
-                                fetch(url, {
-                                    method: 'POST',
-                                    headers: {'Content-Type': 'text/plain'},
-                                    body: spec,
-                                }).then(response => {
-                                    if (!response.ok) {
-                                        throw new Error(response.statusText);
-                                    }
-                                    return response.text();
-                                }).then(data => {
-                                    console.log('Success:', data);
-                                }).catch(error => alert(error));
-                            }
-                        }
-                        window.swaggerEditor.hash = hash;
-                    });
-                }
             },
         });
+
+        let edit = {{ .edit }};
+        if (edit) {
+            function diff(isInit) {
+                // 获取内容
+                let spec = window.swaggerEditor.specSelectors.specStr();
+                hash(spec).then(function (hash) {
+                    if (!isInit && window.swaggerEditor.hash != hash) {
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'text/plain'},
+                            body: spec,
+                        }).then(response => {
+                            if (!response.ok) {
+                                throw new Error(response.statusText);
+                            }
+                            return response.text();
+                        }).then(data => {
+                            console.log('Success:', data);
+                        }).catch(error => alert(error));
+                    }
+                    window.swaggerEditor.hash = hash;
+                });
+                setTimeout(() => diff(false), 2 * 1000);
+            }
+
+            setTimeout(() => diff(true), 2 * 1000);
+        }
     };
 </script>

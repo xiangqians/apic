@@ -4,7 +4,9 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
@@ -12,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 //go:embed swagger.js swagger.css index.html
@@ -52,8 +55,9 @@ func Handle(prefix, dir string) error {
 		fhandler.ServeHTTP(w, r)
 	})))
 
-	// 处理代理请求
 	proxy(prefix)
+
+	example(prefix)
 
 	return nil
 }
@@ -168,9 +172,10 @@ func spec(name, path string, w http.ResponseWriter, r *http.Request) {
 
 // 处理代理请求
 func proxy(prefix string) {
-	http.Handle(fmt.Sprintf("%s/proxy", prefix), http.StripPrefix(prefix, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// 目标服务器地址
-		url := "http://example.com" + r.URL.Path
+	http.Handle(fmt.Sprintf("%s/proxy/", prefix), http.StripPrefix(fmt.Sprintf("%s/proxy", prefix), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var url = r.Header.Get("X-Url")
+		log.Println(url)
+
 		req, err := http.NewRequest(r.Method, url, r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadGateway)
@@ -185,7 +190,10 @@ func proxy(prefix string) {
 		}
 
 		// 发送请求
-		client := &http.Client{}
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // 跳过验证
+		}
+		client := &http.Client{Transport: transport}
 		resp, err := client.Do(req)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadGateway)
@@ -206,4 +214,25 @@ func proxy(prefix string) {
 		// 复制响应体
 		io.Copy(w, resp.Body)
 	})))
+}
+
+func example(prefix string) {
+	http.HandleFunc(fmt.Sprintf("%s/example/", prefix), func(w http.ResponseWriter, r *http.Request) {
+		data, err := json.Marshal(map[string]any{
+			"code": "ok",
+			"msg":  "Ok",
+			"data": map[string]any{
+				"path": r.URL.Path,
+				"time": time.Now(),
+			},
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
+		return
+	})
 }
