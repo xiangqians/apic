@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bufio"
 	"embed"
 	"fmt"
 	"html/template"
@@ -122,9 +123,43 @@ func spec(name, path string, w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", contentType)
 		w.Write(data)
 		return
+	}
 
-	} else if r.Method == http.MethodPost && (name == "swagger.yaml" || name == "swagger.json") {
-		http.NotFound(w, r)
+	if r.Method == http.MethodPost && (name == "swagger.yaml" || name == "swagger.json") {
+		if r.Header.Get("Content-Type") != "text/plain" {
+			http.Error(w, http.StatusText(http.StatusUnsupportedMediaType), http.StatusUnsupportedMediaType)
+			return
+		}
+
+		data, err := io.ReadAll(r.Body)
+		defer r.Body.Close()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		file, err := os.Create(path)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+
+		writer := bufio.NewWriterSize(file, 1<<12) // 4KB 缓冲区
+		_, err = writer.Write(data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = writer.Flush()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("true"))
 		return
 	}
 

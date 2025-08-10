@@ -43,9 +43,10 @@
             return arr.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
+        let url = '{{ .prefix }}/{{ .name }}';
         window.swaggerEditor = SwaggerEditorBundle({
             dom_id: '#swagger-editor',
-            url: '{{ .prefix }}/{{ .name }}',
+            url: url,
             docExpansion: 'none',         // 全部折叠
             defaultModelsExpandDepth: -1, // 隐藏模型定义
             defaultModelExpandDepth: 2,   // 模型默认展开深度
@@ -94,8 +95,19 @@
                 let spec = window.swaggerEditor.specSelectors.specStr();
                 hash(spec).then(function (hash) {
                     if (window.swaggerEditor.hash) {
-                        if(window.swaggerEditor.hash != hash){
-                            console.log('!', hash);
+                        if (window.swaggerEditor.hash != hash) {
+                            fetch(url, {
+                                method: 'POST',
+                                headers: {'Content-Type': 'text/plain'},
+                                body: spec,
+                            }).then(response => {
+                                if (!response.ok) {
+                                    throw new Error(response.statusText);
+                                }
+                                return response.text();
+                            }).then(data => {
+                                console.log('Success:', data);
+                            }).catch(error => alert(error));
                         }
                     }
                     window.swaggerEditor.hash = hash;
