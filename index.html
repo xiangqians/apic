@@ -91,27 +91,30 @@
                 // 设置标题
                 document.title = window.swaggerEditor.specSelectors.info().get('title');
 
-                // 获取内容
-                let spec = window.swaggerEditor.specSelectors.specStr();
-                hash(spec).then(function (hash) {
-                    if (window.swaggerEditor.hash) {
-                        if (window.swaggerEditor.hash != hash) {
-                            fetch(url, {
-                                method: 'POST',
-                                headers: {'Content-Type': 'text/plain'},
-                                body: spec,
-                            }).then(response => {
-                                if (!response.ok) {
-                                    throw new Error(response.statusText);
-                                }
-                                return response.text();
-                            }).then(data => {
-                                console.log('Success:', data);
-                            }).catch(error => alert(error));
+                let edit = {{ .edit }};
+                if(edit){
+                    // 获取内容
+                    let spec = window.swaggerEditor.specSelectors.specStr();
+                    hash(spec).then(function (hash) {
+                        if (window.swaggerEditor.hash) {
+                            if (window.swaggerEditor.hash != hash) {
+                                fetch(url, {
+                                    method: 'POST',
+                                    headers: {'Content-Type': 'text/plain'},
+                                    body: spec,
+                                }).then(response => {
+                                    if (!response.ok) {
+                                        throw new Error(response.statusText);
+                                    }
+                                    return response.text();
+                                }).then(data => {
+                                    console.log('Success:', data);
+                                }).catch(error => alert(error));
+                            }
                         }
-                    }
-                    window.swaggerEditor.hash = hash;
-                });
+                        window.swaggerEditor.hash = hash;
+                    });
+                }
             },
         });
     };
