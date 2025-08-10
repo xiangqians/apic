@@ -2,12 +2,12 @@
 // @date 2025/08/09 19:55
 package main
 
-import pkg_ini "gopkg.in/ini.v1"
+import "gopkg.in/ini.v1"
 
 // LoadConfig 加载配置文件
 func LoadConfig() (Config, error) {
 	var config Config
-	file, err := pkg_ini.Load("config.ini")
+	file, err := ini.Load("config.ini")
 	if err != nil {
 		return config, err
 	}

@@ -36,6 +36,13 @@
 {{ end }}
 <script type="text/javascript">
     window.onload = () => {
+        async function hash(text) {
+            let uint8Arr = new TextEncoder().encode(text);
+            let buf = await crypto.subtle.digest('SHA-256', uint8Arr);
+            let arr = Array.from(new Uint8Array(buf));
+            return arr.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
         window.swaggerEditor = SwaggerEditorBundle({
             dom_id: '#swagger-editor',
             url: '{{ .prefix }}/{{ .name }}',
@@ -80,7 +87,19 @@
                 return request;
             },
             onComplete: function () { // 加载完成回调
+                // 设置标题
                 document.title = window.swaggerEditor.specSelectors.info().get('title');
+
+                // 获取内容
+                let spec = window.swaggerEditor.specSelectors.specStr();
+                hash(spec).then(function (hash) {
+                    if (window.swaggerEditor.hash) {
+                        if(window.swaggerEditor.hash != hash){
+                            console.log('!', hash);
+                        }
+                    }
+                    window.swaggerEditor.hash = hash;
+                });
             },
         });
     };

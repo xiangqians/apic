@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-// InitLogger 初始化日志记录器
-func InitLogger() error {
+// InitLog 初始化日志
+func InitLog() error {
 	// 将日志输出重定向到 stdout
 	//log.SetOutput(os.Stdout)
 

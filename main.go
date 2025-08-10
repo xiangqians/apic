@@ -9,8 +9,11 @@ import (
 )
 
 func main() {
-	// 初始化日志记录器
-	InitLogger()
+	// 初始化日志
+	err := InitLog()
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	// 加载配置文件
 	config, err := LoadConfig()
@@ -19,7 +22,7 @@ func main() {
 	}
 	log.Printf("%+v\n", config)
 
-	// 处理请求
+	// 处理 HTTP 请求
 	err = Handle(config.Prefix, config.Dir)
 	if err != nil {
 		log.Fatalln(err)
