@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link href="{{ .prefix }}/swagger.css" type="text/css" rel="stylesheet">
+    <link href="{{ .prefix }}/v2/ui.css" type="text/css" rel="stylesheet">
     <title>Swag</title>
     <style>
         .swagger-ui {
@@ -28,11 +28,9 @@
 <div id="swagger-editor"></div>
 </body>
 </html>
-<script src="{{ .prefix }}/swagger.js" type="text/javascript"></script>
-{{ range $name, $path := .names }}
-{{ if hasSuffix $name ".js" }}
-<script src="{{ $.prefix }}/{{ $name }}" type="text/javascript"></script>
-{{ end }}
+<script src="{{ .prefix }}/v2/ui.js" type="text/javascript"></script>
+{{ range $js := .jss }}
+<script src="{{ $.prefix }}/{{ $js }}" type="text/javascript"></script>
 {{ end }}
 <script type="text/javascript">
     window.onload = () => {
@@ -43,7 +41,7 @@
             return arr.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        let url = '{{ .prefix }}/{{ .name }}';
+        let url = '{{ .prefix }}/{{ .api }}';
         window.swaggerEditor = SwaggerEditorBundle({
             dom_id: '#swagger-editor',
             url: url,
@@ -68,12 +66,8 @@
             requestInterceptor: function (request) { // 将所有 API 请求转到本地代理
                 let operation = window.swaggerEditor?.operation;
                 if (operation) {
-                    if (window.reqInterceptors) {
-                        let key = operation.method + ' ' + operation.path;
-                        let reqInterceptor = window.reqInterceptors[key];
-                        if (reqInterceptor) {
-                            request = reqInterceptor(request);
-                        }
+                    if (window.requestInterceptor) {
+                        request = window.requestInterceptor.handle(operation, request);
                     }
 
                     let specSelectors = window.swaggerEditor.specSelectors;
@@ -87,6 +81,9 @@
                 return request;
             },
             responseInterceptor: (response) => {
+                // if (window.responseInterceptor) {
+                //     response = window.responseInterceptor.handle(operation, response);
+                // }
                 return response;
             },
             onComplete: function () { // 加载完成回调

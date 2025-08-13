@@ -1,4 +1,4 @@
-module swag
+module apic
 
 go 1.24
 

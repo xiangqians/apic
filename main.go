@@ -3,6 +3,7 @@
 package main
 
 import (
+	"apic/handler"
 	"fmt"
 	"log"
 	"net/http"
@@ -22,13 +23,10 @@ func main() {
 	}
 	log.Printf("%+v\n", config)
 
-	// 处理 HTTP 请求
-	err = Handle(config.Prefix, config.Dir)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	// 处理请求
+	handler.Handle(config.Prefix, config.Dir)
 
-	// 启动 HTTP 服务
+	// 启动服务
 	port := config.Port
 	log.Printf("Server starting on port %d ...\n", port)
 	err = http.ListenAndServe(fmt.Sprintf(":%d", port), nil)

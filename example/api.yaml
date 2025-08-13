@@ -1,0 +1,203 @@
+swagger: "2.0"
+
+host: localhost:58080
+
+info:
+  title: 示例
+  description: 示例
+  version: 1.0.0
+  contact: { }
+
+schemes: [ http, https ]
+
+# 定义安全认证方式
+securityDefinitions:
+  # API Key 认证
+  apiKey:
+    # 认证方式是通过 API 密钥进行身份验证
+    type: apiKey 
+    # 名称
+    name: X-API-Key
+    # 指定 API 密钥的位置
+    # header：放在请求头，如 Authorization: Bearer xxx
+    # query ：放在 URL 参数，如 ?apiKey=xxx
+    # cookie：OpenAPI 3.0 支持
+    in: header
+
+# 启用全局认证（所有接口默认需要 X-API-Key）
+security:
+  - apiKey: []
+
+paths:
+  /example:
+    post:
+      summary: 新增
+      description: 新增信息
+      tags: [ "Example" ]
+      consumes: [ application/json ]
+      parameters:
+        - name: request
+          description: 请求信息
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/model.Example"
+      produces: [ application/json ]
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/model.Resp"
+              - properties:
+                  data:
+                    type: boolean
+                type: object
+    put:
+      summary: 修改
+      description: 修改信息
+      tags: [ Example ]
+      consumes: [ application/json ]
+      parameters:
+        - name: request
+          description: 请求信息
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/model.Example"
+      produces: [ application/json ]
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/model.Resp"
+              - properties:
+                  data:
+                    type: boolean
+                type: object
+    get:
+      # 覆盖全局定义安全认证方式，即此接口不需要认证
+      security: []
+      summary: 查询
+      description: 查询信息
+      tags: [ Example ]
+      parameters:
+        - name: id
+          description: 主键
+          in: query
+          # 数据模型的基本数据类型
+          # string ：字符串
+          # number ：浮点数
+          # integer：整数
+          # boolean：布尔值
+          # array  ：数组
+          # object ：键值对对象
+          # file   ：文件
+          type: integer
+        - name: name
+          description: 名称
+          in: query
+          type: string
+        - name: time
+          description: 时间
+          in: query
+          type: string
+      produces: [ application/json ]
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/model.Resp"
+              - properties:
+                  data:
+                    $ref: "#/definitions/model.Example"
+                type: object
+  /example/upload:
+    post:
+      summary: 上传
+      description: 上传信息
+      tags: [ "Example" ]
+      consumes: [ multipart/form-data ]
+      parameters:
+        - name: id
+          description: 主键
+          in: formData
+          required: true
+          type: integer
+        - name: name
+          description: 名称
+          in: formData
+          required: true
+          type: string
+        - name: time
+          description: 时间
+          in: formData
+          required: true
+          type: string
+        - name: file
+          description: 文件
+          in: formData
+          required: true
+          type: file
+      produces: [ application/json ]
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/model.Resp"
+              - properties:
+                  data:
+                    type: boolean
+                type: object
+  /example/{id}:
+    delete:
+      summary: 删除
+      description: 删除信息
+      tags: [ Example ]
+      parameters:
+        - name: id
+          description: 主键
+          in: path
+          required: true
+          default: 12
+          type: integer
+      produces: [ application/json ]
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/model.Resp"
+              - properties:
+                  data:
+                    type: boolean
+                type: object
+
+definitions:
+  model.Example:
+    properties:
+      id:
+        description: 主键
+        type: integer
+      name:
+        description: 名称
+        type: string
+      time:
+        description: 时间
+        type: string
+    type: object
+
+  model.Resp:
+    properties:
+      code:
+        description: 状态码
+        type: string
+      msg:
+        description: 消息
+        type: string
+      data:
+        description: 数据
+    type: object

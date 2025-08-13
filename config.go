@@ -16,15 +16,15 @@ func LoadConfig() (Config, error) {
 	if err != nil {
 		return config, err
 	}
+
 	config.Port = uint16(section.Key("port").MustUint())
 	config.Prefix = section.Key("prefix").String()
 	config.Dir = section.Key("dir").String()
-
 	return config, nil
 }
 
 type Config struct {
 	Port   uint16 // HTTP 监听端口
 	Prefix string // HTTP 请求前缀
-	Dir    string // Spec 目录
+	Dir    string // API 目录
 }
