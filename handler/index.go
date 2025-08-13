@@ -65,7 +65,7 @@ func index(prefix, dir string, embedfs embed.FS, w http.ResponseWriter, r *http.
 	}
 
 	var data = map[string]interface{}{
-		"edit":   r.URL.Path == "/edit",
+		"edit":   r.URL.Path == "/edit" || r.URL.Path == "/edit/",
 		"prefix": prefix,
 		"api":    name,
 		"jss":    names[1:],
