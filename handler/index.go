@@ -25,7 +25,7 @@ func index(prefix string, w http.ResponseWriter) {
 		dirs = append(dirs, dir)
 	}
 
-	var data = map[string]interface{}{
+	var data = map[string]any{
 		"prefix": prefix,
 		"dirs":   dirs,
 	}
@@ -86,7 +86,7 @@ func index1(prefix string, embedfs embed.FS, w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	var data = map[string]interface{}{
+	var data = map[string]any{
 		"edit":   r.URL.Path == "/edit" || r.URL.Path == "/edit/",
 		"prefix": prefix,
 		"api":    name,

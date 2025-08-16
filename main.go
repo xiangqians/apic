@@ -24,7 +24,7 @@ func main() {
 	log.Printf("%+v\n", config)
 
 	// 处理请求
-	handler.Handle(config.Prefix)
+	handler.Handle(config.Prefix, config.User, config.Passwd)
 
 	// 启动服务
 	port := config.Port

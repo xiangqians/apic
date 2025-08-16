@@ -76,7 +76,7 @@ func swagger(prefix string, w http.ResponseWriter, r *http.Request) {
 }
 
 func vswagger(prefix string, dir Dir, file File, w http.ResponseWriter) {
-	var data = map[string]interface{}{
+	var data = map[string]any{
 		"prefix": prefix,
 		"dir":    dir,
 		"file":   file,

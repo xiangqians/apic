@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{{ .prefix }}/image/favicon.svg" type="image/svg+xml" rel="icon">
+    <link href="{{ .prefix }}/css/login.css" type="text/css" rel="stylesheet">
+    <title>Apic</title>
+</head>
+<body>
+<div class="container">
+    <div class="logo">Apic</div>
+    <form action="/login1" method="post">
+        {{ if .error }}
+        <div class="input-group">
+            <div class="error">{{ .error }}</div>
+        </div>
+        {{ end }}
+        <div class="input-group">
+            <label for="user">用户名</label>
+            <input id="user" name="user" type="text" placeholder="请输入用户名" value="{{ .user }}" required>
+        </div>
+        <div class="input-group">
+            <label for="passwd">密码</label>
+            <input id="passwd" name="passwd" type="password" placeholder="请输入密码" value="" required>
+        </div>
+        <button type="submit">登录</button>
+    </form>
+    <div class="footer">
+        <span>&copy; 2025 xiangqian</span>
+        <a href="https://github.com/xiangqians/apic" target="_blank">GitHub</a>
+    </div>
+</div>
+</body>
+</html>

@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
+	"time"
 )
 
 // 是否是开发环境
@@ -18,7 +19,7 @@ const dev = true
 //go:embed css/* js/* html/*
 var embedfs embed.FS
 
-func Handle(prefix string) error {
+func Handle(prefix, user, passwd string) error {
 	// 文件服务器
 	for _, dir := range []string{"image", "css", "js"} {
 		var iofs fs.FS
@@ -42,17 +43,65 @@ func Handle(prefix string) error {
 	// 处理请求
 	http.Handle(fmt.Sprintf("%s/", prefix), http.StripPrefix(fmt.Sprintf("%s", prefix), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var path = r.URL.Path
+
+		if user != "" && passwd != "" {
+			// 登录页面
+			if path == "/login" {
+				login(prefix, w, r)
+				return
+			}
+
+			// 登录
+			if path == "/login1" {
+				login1(prefix, user, passwd, w, r)
+				return
+			}
+
+			// 获取会话
+			session, err := GetSession(r)
+			// 判断会话是否有效
+			if err != nil || session == nil || session.ExpireTime.Before(time.Now()) {
+				if session != nil {
+					DelSession(w, r)
+				}
+				// 重定向到登录页
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
+
+			// 登出
+			if path == "/logout" {
+				logout(prefix, w, r)
+				return
+			}
+		}
+
+		// 首页
 		if path == "" || path == "/" {
 			index(prefix, w)
 			return
 		}
 
+		// 文档
 		swagger(prefix, w, r)
 	})))
 
+	// 未匹配路由返回错误页
 	if prefix != "" {
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			// 未匹配路由返回错误页
+			if user != "" && passwd != "" {
+				// 获取会话
+				session, err := GetSession(r)
+				// 判断会话是否有效
+				if err != nil || session == nil || session.ExpireTime.Before(time.Now()) {
+					if session != nil {
+						DelSession(w, r)
+					}
+					// 重定向到登录页
+					http.Redirect(w, r, "/login", http.StatusFound)
+					return
+				}
+			}
 			erro(prefix, errors.New(http.StatusText(http.StatusNotFound)), w)
 		})
 	}
@@ -65,7 +114,7 @@ func Handle(prefix string) error {
 
 // 错误页
 func erro(prefix string, err error, w http.ResponseWriter) {
-	var data = map[string]interface{}{
+	var data = map[string]any{
 		"prefix": prefix,
 		"error":  err,
 	}
