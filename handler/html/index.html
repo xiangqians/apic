@@ -21,7 +21,7 @@
             {{ range $file := $dir.Files }}
             {{ if or (eq $file.Type "yaml") (eq $file.Type "json") }}
             <tr>
-                <td class="text"><a href="{{ $.prefix }}/{{ $dir.Id }}/{{ $file.Id }}/view">{{ $file.Name }}</a></td>
+                <td class="text"><a href="{{ $.prefix }}/{{ $dir.Id }}/{{ $file.Id }}/t">{{ $file.Name }}</a></td>
             </tr>
             {{ end }}
             {{ end }}

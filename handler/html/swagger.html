@@ -52,7 +52,8 @@
                     }
                 },
             })],
-            requestInterceptor: function (request) { // 将所有 API 请求转到本地代理
+            // 请求拦截器，将所有 API 请求转到本地代理
+            requestInterceptor: function (request) {
                 let operation = window.swaggerEditor?.operation;
                 if (operation) {
                     if (window.requestInterceptor) {
@@ -69,13 +70,18 @@
                 }
                 return request;
             },
+            // 响应拦截器
             responseInterceptor: (response) => {
-                // if (window.responseInterceptor) {
-                //     response = window.responseInterceptor.handle(operation, response);
-                // }
+                let operation = window.swaggerEditor?.operation;
+                if (operation) {
+                    if (window.responseInterceptor) {
+                        response = window.responseInterceptor.handle(operation, response);
+                    }
+                }
                 return response;
             },
-            onComplete: function () { // 加载完成回调
+            // 加载完成回调
+            onComplete: function () {
                 // 设置标题
                 document.title = window.swaggerEditor.specSelectors.info().get('title');
 
@@ -131,6 +137,7 @@
             },
         });
 
+        const timeout = 2 * 1000;
         function diff() {
             // 获取内容
             let spec = window.swaggerEditor.specSelectors.specStr();
@@ -138,6 +145,7 @@
             hash(spec).then(function (hash) {
                 if (window.swaggerEditor.hash == null) {
                     window.swaggerEditor.hash = hash;
+                    setTimeout(() => diff(), timeout);
                 } else if (window.swaggerEditor.hash != hash) {
                     fetch(url, {
                         method: 'POST',
@@ -149,14 +157,22 @@
                         }
                         return response.text();
                     }).then(data => {
-                        console.log('Success:', data);
-                        window.swaggerEditor.hash = hash;
-                    }).catch(error => alert(error));
+                        if (data === 'ok') {
+                            // console.log(data);
+                            window.swaggerEditor.hash = hash;
+                        } else {
+                            alert(data);
+                        }
+                        setTimeout(() => diff(), timeout);
+                    }).catch(error => {
+                        alert(error);
+                        setTimeout(() => diff(), timeout);
+                    });
+                } else {
+                    setTimeout(() => diff(), timeout);
                 }
-
             });
-            setTimeout(() => diff(), 2 * 1000);
         }
-        setTimeout(() => diff(), 2 * 1000);
+        setTimeout(() => diff(), timeout);
     };
 </script>

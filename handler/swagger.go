@@ -15,22 +15,48 @@ import (
 )
 
 func swagger(prefix, user string, w http.ResponseWriter, r *http.Request) {
-	var view bool
-	var path = r.URL.Path
-	if strings.HasSuffix(path, "/view") {
-		path = path[0 : len(path)-len("/view")]
-		view = true
+	dir, file, t, err := parse(r.URL.Path)
+	switch r.Method {
+	case http.MethodGet:
+		if err != nil {
+			erro(prefix, errors.New(http.StatusText(http.StatusNotFound)), w)
+			return
+		}
+		if t {
+			tswagger(prefix, user, dir, file, w)
+		} else {
+			gswagger(prefix, dir, file, w)
+		}
+
+	case http.MethodPost:
+		if err != nil {
+			w.Header().Set("Content-Type", "text/plain")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		pswagger(dir, file, w, r)
+
+	default:
+		erro(prefix, errors.New(http.StatusText(http.StatusNotFound)), w)
 	}
+}
+
+func parse(path string) (Dir, File, bool, error) {
+	var t bool
+	if strings.HasSuffix(path, "/t") {
+		path = path[0 : len(path)-len("/t")]
+		t = true
+	}
+
 	arr := strings.Split(path, "/")
 	if len(arr) != 3 {
-		erro(prefix, errors.New(http.StatusText(http.StatusNotFound)), w)
-		return
+		return Dir{}, File{}, false, errors.New("!=3")
 	}
 
 	dirs, err := readDirs()
 	if err != nil {
-		erro(prefix, err, w)
-		return
+		return Dir{}, File{}, false, err
 	}
 
 	var dir Dir
@@ -42,40 +68,25 @@ func swagger(prefix, user string, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if dir.Id == "" {
-		erro(prefix, errors.New(http.StatusText(http.StatusNotFound)), w)
-		return
+		return Dir{}, File{}, false, errors.New("dir not found")
 	}
 
 	var file File
 	var fid = arr[2]
-	if fid != "" {
-		for _, f := range dir.Files {
-			if f.Id == fid {
-				file = f
-				break
-			}
+	for _, f := range dir.Files {
+		if f.Id == fid {
+			file = f
+			break
 		}
-		if file.Id == "" {
-			erro(prefix, errors.New(http.StatusText(http.StatusNotFound)), w)
-			return
-		}
+	}
+	if file.Id == "" {
+		return Dir{}, File{}, false, errors.New("file not found")
 	}
 
-	switch r.Method {
-	case http.MethodGet:
-		if view {
-			vswagger(prefix, user, dir, file, w)
-		} else {
-			gswagger(prefix, dir, file, w)
-		}
-	case http.MethodPost:
-		pswagger(dir, file, w, r)
-	default:
-		erro(prefix, errors.New(http.StatusText(http.StatusNotFound)), w)
-	}
+	return dir, file, t, nil
 }
 
-func vswagger(prefix, user string, dir Dir, file File, w http.ResponseWriter) {
+func tswagger(prefix, user string, dir Dir, file File, w http.ResponseWriter) {
 	var data = map[string]any{
 		"prefix": prefix,
 		"user":   user,
