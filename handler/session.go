@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"net/http"
 	"net/url"
+	"sort"
 	"sync"
 	"time"
 )
@@ -21,15 +22,23 @@ func init() {
 	sessions = make(map[string]*Session)
 }
 
-// GetSession 获取会话
-func GetSession(r *http.Request) (*Session, error) {
+// 会话是否已过期
+func expired(r *http.Request) bool {
+	// 获取会话
+	session, err := gsession(r)
+	// 判断会话是否已过期
+	return err != nil || session == nil || session.ExpiresAt.Before(time.Now())
+}
+
+// 获取会话
+func gsession(r *http.Request) (*Session, error) {
 	// 获取读锁，允许多个读操作同时进行
 	rwMutex.RLock()
 	// 释放读锁
 	defer rwMutex.RUnlock()
 
 	// 获取会话id
-	id, err := GetCookie(r, "session_id")
+	id, err := gcookie(r, "session_id")
 	if err != nil {
 		return nil, err
 	}
@@ -42,8 +51,8 @@ func GetSession(r *http.Request) (*Session, error) {
 	return session, nil
 }
 
-// SetSession 设置会话
-func SetSession(w http.ResponseWriter, user any) error {
+// 设置会话
+func ssession(w http.ResponseWriter) error {
 	// 获取写锁，阻塞其他所有读写操作
 	rwMutex.Lock()
 	// 释放写锁
@@ -57,12 +66,11 @@ func SetSession(w http.ResponseWriter, user any) error {
 	}
 	id := base64.RawURLEncoding.EncodeToString(buf)
 
-	// 设置会话
+	// 设置会话过期时间，12h
 	var maxAge = 12 * 60 * 60
 	session := &Session{
-		Id:         id,
-		User:       user,
-		ExpireTime: time.Now().Add(time.Duration(maxAge) * time.Second),
+		Id:        id,
+		ExpiresAt: time.Now().Add(time.Duration(maxAge) * time.Second),
 	}
 	sessions[id] = session
 
@@ -75,18 +83,44 @@ func SetSession(w http.ResponseWriter, user any) error {
 		MaxAge:   maxAge,       // Cookie 有效期（单位：秒），设置为正数表示多少秒后过期，设置为 0 表示立即删除 Cookie，设置为负数表示会话 Cookie（浏览器关闭后删除）
 	})
 
+	var maxLen = 100
+	var sLen = len(sessions)
+	if sLen > maxLen {
+		var sessionArr = make([]*Session, 0, sLen)
+		for _, session = range sessions {
+			sessionArr = append(sessionArr, session)
+		}
+		sort.Slice(sessionArr, func(i, j int) bool {
+			return sessionArr[i].ExpiresAt.Before(sessionArr[j].ExpiresAt)
+		})
+
+		var i = 0
+		for l := sLen - maxLen; i < l; i++ {
+			session = sessionArr[i]
+			delete(sessions, session.Id)
+		}
+		for l := sLen; i < l; i++ {
+			session = sessionArr[i]
+			if session.ExpiresAt.Before(time.Now()) {
+				delete(sessions, session.Id)
+			} else {
+				break
+			}
+		}
+	}
+
 	return nil
 }
 
-// DelSession 删除会话
-func DelSession(w http.ResponseWriter, r *http.Request) error {
+// 删除会话
+func dsession(w http.ResponseWriter, r *http.Request) error {
 	// 获取写锁，阻塞其他所有读写操作
 	rwMutex.Lock()
 	// 释放写锁
 	defer rwMutex.Unlock()
 
 	// 获取会话id
-	id, err := GetCookie(r, "session_id")
+	id, err := gcookie(r, "session_id")
 	if err != nil {
 		return err
 	}
@@ -95,13 +129,13 @@ func DelSession(w http.ResponseWriter, r *http.Request) error {
 	delete(sessions, id)
 
 	// 设置 Cookie
-	SetCookie(w, "session_id", "", -1)
+	scookie(w, "session_id", "", -1)
 
 	return nil
 }
 
-// GetCookie 获取 Cookie
-func GetCookie(r *http.Request, name string) (string, error) {
+// 获取 Cookie
+func gcookie(r *http.Request, name string) (string, error) {
 	cookie, err := r.Cookie(name)
 	if err != nil {
 		return "", err
@@ -114,8 +148,8 @@ func GetCookie(r *http.Request, name string) (string, error) {
 	return value, nil
 }
 
-// SetCookie 设置 Cookie
-func SetCookie(w http.ResponseWriter, name, value string, maxAge int) {
+// 设置 Cookie
+func scookie(w http.ResponseWriter, name, value string, maxAge int) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     name,
 		Value:    url.QueryEscape(value),
@@ -127,7 +161,6 @@ func SetCookie(w http.ResponseWriter, name, value string, maxAge int) {
 
 // Session 会话
 type Session struct {
-	Id         string
-	User       any
-	ExpireTime time.Time
+	Id        string
+	ExpiresAt time.Time
 }

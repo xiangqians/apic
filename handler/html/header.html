@@ -8,9 +8,11 @@
         <a class="edit" href="javascript:void(0)" value="0">编辑</a>
         {{ end }}
     </section>
+    {{ if .user }}
     <section>
-        <span>admin</span>
+        <span>{{ .user }}</span>
         <a class="logout" href="{{ .prefix }}/logout">登出</a>
     </section>
+    {{ end }}
 </div>
 {{ end }}
