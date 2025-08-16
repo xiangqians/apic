@@ -10,6 +10,7 @@ import (
 	"net/http"
 )
 
+// 代理
 func proxy(prefix string) {
 	http.HandleFunc(fmt.Sprintf("%s/proxy/", prefix), func(w http.ResponseWriter, r *http.Request) {
 		// 目标请求地址

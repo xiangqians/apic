@@ -1,0 +1,16 @@
+<!-- 页眉 -->
+{{ define "header" }}
+<div class="header">
+    <section>
+        <a href="{{ .prefix }}/">~</a>
+        {{ if and .dir .file }}
+        <span> / {{ .dir.Name }}</span><span> / {{ .file.Name }}</span>
+        <a class="edit" href="javascript:void(0)" value="0">编辑</a>
+        {{ end }}
+    </section>
+    <section>
+        <span>admin</span>
+        <a class="logout" href="/logout">登出</a>
+    </section>
+</div>
+{{ end }}

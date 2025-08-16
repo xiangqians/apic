@@ -1,0 +1,22 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 20px;
+    font-size: 13px;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid #eee;
+}
+
+.header a {
+    text-decoration: none;
+}
+
+.header a.logout {
+    margin-left: 15px;
+}
+
+.header .edit {
+    margin-left: 10px;
+}

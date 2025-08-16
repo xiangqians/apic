@@ -13,15 +13,37 @@ import (
 	"regexp"
 )
 
-func index(prefix, dir string, embedfs embed.FS, w http.ResponseWriter, r *http.Request) {
-	names, err := readDir(dir)
+func index(prefix string, w http.ResponseWriter) {
+	dirs, err := readDirs()
+	if err != nil {
+		erro(prefix, err, w)
+		return
+	}
+
+	// test
+	for _, dir := range dirs {
+		dirs = append(dirs, dir)
+	}
+
+	var data = map[string]interface{}{
+		"prefix": prefix,
+		"dirs":   dirs,
+	}
+	execTmpl("index", data, w)
+}
+
+// ============================
+
+func index1(prefix string, embedfs embed.FS, w http.ResponseWriter, r *http.Request) {
+	names := []string{}
+	var err error
 	if err != nil || len(names) == 0 {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	name := names[0]
-	file, err := os.Open(path.Join(dir, name))
+	file, err := os.Open(path.Join("dir", name))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

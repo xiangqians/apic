@@ -37,7 +37,7 @@ set OUT_PATH=%OUT_DIR%\%OUT_NAME%
 cd "%CUR_DIR%" && go build -ldflags="-s -w" -o "%OUT_PATH%"
 
 rem 压缩可执行文件
-upx -9 --brute --backup "%OUT_PATH%"
+::upx -9 --brute --backup "%OUT_PATH%"
 
 rem 启动命令
 (

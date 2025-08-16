@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{{ .prefix }}/image/favicon.svg" type="image/svg+xml" rel="icon">
+    <link href="{{ .prefix }}/css/header.css" type="text/css" rel="stylesheet">
+    <link href="{{ .prefix }}/css/footer.css" type="text/css" rel="stylesheet">
+    <link href="{{ .prefix }}/css/index.css" type="text/css" rel="stylesheet">
+    <title>Apic</title>
+</head>
+<body>
+{{ template "header" . }}
+<div class="main">
+    <div class="container">
+        {{ range $dir := .dirs }}
+        <table class="card">
+            <tr>
+                <td class="name" colspan="4">{{ $dir.Name }}</td>
+            </tr>
+            {{ range $file := $dir.Files }}
+            {{ if or (eq $file.Type "yaml") (eq $file.Type "json") }}
+            <tr>
+                <td class="text"><a href="{{ $.prefix }}/{{ $dir.Id }}/{{ $file.Id }}/view">{{ $file.Name }}</a></td>
+            </tr>
+            {{ end }}
+            {{ end }}
+        </table>
+        {{ end }}
+    </div>
+</div>
+{{ template "footer" }}
+</body>
+</html>
