@@ -16,7 +16,7 @@ echo "CUR_DIR : ${cur_dir}"
 out_dir="${cur_dir}/build"
 echo "OUT_DIR : ${out_dir}"
 
-# 清空输出目录
+# 删除输出目录
 rm -rf "${out_dir}"
 # 创建输出目录
 mkdir -p "${out_dir}"

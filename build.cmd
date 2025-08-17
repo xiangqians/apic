@@ -19,7 +19,11 @@ echo CUR_DIR : %CUR_DIR%
 rem 输出目录
 set OUT_DIR=%CUR_DIR%\build
 echo OUT_DIR : %OUT_DIR%
-if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
+
+rem 删除输出目录
+if exist "%OUT_DIR%" rd /s /q "%OUT_DIR%"
+rem 创建输出目录
+mkdir "%OUT_DIR%"
 
 rem 拷贝文件
 rem 隐藏无用输出：> nul（标准输出），2> nul（错误输出）

@@ -29,7 +29,7 @@ FROM alpine:3.20
 # 设置工作目录
 WORKDIR /app
 
-# 从 builder 阶段文件
+# 从 builder 阶段复制文件
 COPY --from=builder /app/apic ./
 COPY --from=builder /app/config.ini ./
 COPY --from=builder /app/example ./example
