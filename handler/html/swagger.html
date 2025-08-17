@@ -52,7 +52,12 @@
                 let operation = window.swaggerEditor?.operation;
                 if (operation) {
                     if (window.requestInterceptor) {
-                        request = window.requestInterceptor.handle(operation, request);
+                        try {
+                            request = window.requestInterceptor.handle(operation, request);
+                        } catch (e) {
+                            console.error(e);
+                            throw e;
+                        }
                     }
 
                     let specSelectors = window.swaggerEditor.specSelectors;
@@ -70,7 +75,12 @@
                 let operation = window.swaggerEditor?.operation;
                 if (operation) {
                     if (window.responseInterceptor) {
-                        response = window.responseInterceptor.handle(operation, response);
+                        try {
+                            response = window.responseInterceptor.handle(operation, response);
+                        } catch (e) {
+                            console.error(e);
+                            throw e;
+                        }
                     }
                 }
                 return response;
