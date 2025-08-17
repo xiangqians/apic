@@ -15,6 +15,7 @@
 </html>
 <script src="{{ .prefix }}/js/crypto-js.js" type="text/javascript"></script>
 <script src="{{ .prefix }}/js/swagger.js" type="text/javascript"></script>
+<script src="{{ .prefix }}/js/util.js" type="text/javascript"></script>
 {{ range $file := .dir.Files }}
 {{ if eq $file.Type "js" }}
 <script src="{{ $.prefix }}/{{ $.dir.Id }}/{{ $file.Id }}" type="text/javascript"></script>
