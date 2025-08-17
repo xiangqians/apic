@@ -21,6 +21,13 @@ func uhandle(prefix, user, passwd string) {
 
 func login(prefix string) {
 	http.HandleFunc(fmt.Sprintf("%s/login", prefix), func(w http.ResponseWriter, r *http.Request) {
+		// 判断会话是否已过期
+		if !expired(r) {
+			// 重定向到首页
+			http.Redirect(w, r, fmt.Sprintf("%s/", prefix), http.StatusFound)
+			return
+		}
+
 		user, _ := gcookie(r, "user")
 		errstr, _ := gcookie(r, "error")
 		var data = map[string]any{

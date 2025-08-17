@@ -16,6 +16,8 @@ func phandle(prefix string) {
 		// 目标请求地址
 		var url = r.Header.Get("X-Url")
 		log.Println(url)
+		
+		// X-Timeout
 
 		// 创建一个新的请求
 		req, err := http.NewRequest(r.Method, url, r.Body)

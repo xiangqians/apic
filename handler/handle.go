@@ -13,7 +13,7 @@ import (
 // 是否是开发环境
 const dev = true
 
-//go:embed css/* js/* html/*
+//go:embed image/* css/* js/* html/*
 var embedfs embed.FS
 
 func Handle(prefix, user, passwd string) error {

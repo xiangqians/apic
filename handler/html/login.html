@@ -10,7 +10,7 @@
 <body>
 <div class="container">
     <div class="logo">Apic</div>
-    <form action="/login1" method="post">
+    <form action="{{ .prefix }}/login1" method="post">
         {{ if .error }}
         <div class="input-group">
             <div class="error">{{ .error }}</div>
