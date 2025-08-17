@@ -13,6 +13,7 @@
 <div id="swagger-editor"></div>
 </body>
 </html>
+<script src="{{ .prefix }}/js/crypto-js.js" type="text/javascript"></script>
 <script src="{{ .prefix }}/js/swagger.js" type="text/javascript"></script>
 {{ range $file := .dir.Files }}
 {{ if eq $file.Type "js" }}
@@ -21,13 +22,6 @@
 {{ end }}
 <script type="text/javascript">
     window.onload = () => {
-        async function hash(text) {
-            let uint8Arr = new TextEncoder().encode(text);
-            let buf = await crypto.subtle.digest('SHA-256', uint8Arr);
-            let arr = Array.from(new Uint8Array(buf));
-            return arr.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
         window.urlName = '{{ .file.Name }}';
         let url = '{{ $.prefix }}/{{ .dir.Id }}/{{ .file.Id }}';
         window.swaggerEditor = SwaggerEditorBundle({
@@ -142,36 +136,35 @@
             // 获取内容
             let spec = window.swaggerEditor.specSelectors.specStr();
             // 计算哈希值
-            hash(spec).then(function (hash) {
-                if (window.swaggerEditor.hash == null) {
-                    window.swaggerEditor.hash = hash;
+            let hash = CryptoJS.SHA256(spec).toString();
+            if (window.swaggerEditor.hash == null) {
+                window.swaggerEditor.hash = hash;
+                setTimeout(() => diff(), timeout);
+            } else if (window.swaggerEditor.hash != hash) {
+                fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'text/plain'},
+                    body: spec,
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error(response.statusText);
+                    }
+                    return response.text();
+                }).then(data => {
+                    if (data === 'ok') {
+                        // console.log(data);
+                        window.swaggerEditor.hash = hash;
+                    } else {
+                        alert(data);
+                    }
                     setTimeout(() => diff(), timeout);
-                } else if (window.swaggerEditor.hash != hash) {
-                    fetch(url, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'text/plain'},
-                        body: spec,
-                    }).then(response => {
-                        if (!response.ok) {
-                            throw new Error(response.statusText);
-                        }
-                        return response.text();
-                    }).then(data => {
-                        if (data === 'ok') {
-                            // console.log(data);
-                            window.swaggerEditor.hash = hash;
-                        } else {
-                            alert(data);
-                        }
-                        setTimeout(() => diff(), timeout);
-                    }).catch(error => {
-                        alert(error);
-                        setTimeout(() => diff(), timeout);
-                    });
-                } else {
+                }).catch(error => {
+                    alert(error);
                     setTimeout(() => diff(), timeout);
-                }
-            });
+                });
+            } else {
+                setTimeout(() => diff(), timeout);
+            }
         }
         setTimeout(() => diff(), timeout);
     };

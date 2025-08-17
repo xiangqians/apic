@@ -11,7 +11,7 @@ import (
 )
 
 // 是否是开发环境
-const dev = true
+const dev = false
 
 //go:embed image/* css/* js/* html/*
 var embedfs embed.FS
